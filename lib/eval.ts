@@ -1,6 +1,7 @@
 import {
   Attribute,
   Collection,
+  CollectionFunc,
   Context,
   Enum,
   EvalOutput,
@@ -32,6 +33,7 @@ export const funcPool: FuncPool = {
     return matches[0].value;
   },
   AllOf: (collection: Value[], lambda: (Value) => boolean): boolean => {
+    console.log(collection);
     return collection
       .map((input) => ({
         funcPool,
@@ -51,8 +53,8 @@ export const funcPool: FuncPool = {
   Equal: (x: Number, y: Number): boolean => x === y,
   Exists: (label: string, model: Model): boolean =>
     !!funcPool[ModelFunc.Lookup](label, model),
-  ExistsAnd: (label: string, model: Model, nextExpr: boolean) =>
-    funcPool[OptionalFunc.Exists](label, model) && nextExpr,
+  ExistsAnd: (label: string, model: Model) =>
+    funcPool[OptionalFunc.Exists](label, model),
   Is: (left: Enum, right: Enum) => left === right,
   IsAfter: (curr: Date, compr: Date) => curr > compr,
   IsBefore: (curr: Date, compr: Date) => curr < compr,
@@ -104,6 +106,11 @@ export const evaluator = (expr: Expression, ctx: Context): Value => {
           return evaluator(consequent as Expression, ctx);
         }
         return false;
+      })();
+    case IdentityFunc.Lambda:
+      return (() => {
+        const [subExpression] = [...args];
+        return funcPool[IdentityFunc.Lambda](subExpression);
       })();
     default:
       const resultParams = [...args.map((expr) => evaluator(expr, ctx)), input];

@@ -1,9 +1,12 @@
-import { Eval, evaluator, funcPool } from "../lib/eval";
+import { evaluator, funcPool } from "../lib/eval";
 import {
   AttributeType,
+  BooleanFunc,
+  CollectionFunc,
   Context,
   DateFunc,
   Expression,
+  IdentityFunc,
   LogicalFunc,
   Model,
   ModelFunc,
@@ -168,5 +171,82 @@ describe("Evaluation tests", () => {
       op: OptionalFunc.ExistsAnd,
     };
     expect(evaluator(parentOfChildAbove20YrsOld, ctx)).toBe(true);
+  });
+
+  test("Eval can handle collections", () => {
+    const alice: Model = {
+      attributes: [
+        { label: "vaccinated", type: AttributeType.Boolean, value: true },
+        { label: "age", type: AttributeType.Number, value: 20 },
+      ],
+      type: AttributeType.Model,
+      label: "person",
+    };
+    const bob: Model = {
+      attributes: [
+        { label: "vaccinated", type: AttributeType.Boolean, value: false },
+        { label: "age", type: AttributeType.Number, value: 11 },
+      ],
+      type: AttributeType.Model,
+      label: "person",
+    };
+    const charlie: Model = {
+      attributes: [
+        { label: "vaccinated", type: AttributeType.Boolean, value: true },
+        { label: "age", type: AttributeType.Number, value: 90 },
+      ],
+      type: AttributeType.Model,
+      label: "person",
+    };
+    const daniel: Model = {
+      attributes: [
+        { label: "vaccinated", type: AttributeType.Boolean, value: false },
+        { label: "age", type: AttributeType.Number, value: 30 },
+      ],
+      type: AttributeType.Model,
+      label: "person",
+    };
+    const groupInstance: Model = {
+      attributes: [
+        {
+          label: "group",
+          type: AttributeType.Collection,
+          value: [alice, bob, charlie, daniel],
+        },
+        { label: "same household", type: AttributeType.Boolean, value: true },
+      ],
+      type: AttributeType.Model,
+      label: "group",
+    };
+    const ctx = {
+      ...context,
+      input: groupInstance,
+    };
+
+    const isVaccinated: Expression = {
+      args: [
+        {
+          args: ["vaccinated"],
+          op: ModelFunc.Lookup,
+        },
+      ],
+      op: BooleanFunc.IsChecked,
+    };
+
+    const allVaccinated: Expression = {
+      args: [
+        {
+          args: ["group"],
+          op: ModelFunc.Lookup,
+        },
+        {
+          args: [isVaccinated],
+          op: IdentityFunc.Lambda,
+        },
+      ],
+      op: CollectionFunc.AllOf,
+    };
+
+    expect(evaluator(allVaccinated, ctx)).toBe(false);
   });
 });
