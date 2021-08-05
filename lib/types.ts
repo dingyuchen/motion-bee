@@ -65,6 +65,7 @@ export enum OptionalFunc {
 
 export enum ModelFunc {
   Lookup = "Lookup",
+  // Dereference = "Dereference",
 }
 
 export interface ModelDefinition {
@@ -75,7 +76,7 @@ export interface ModelDefinition {
 export interface Attribute {
   readonly type: AttributeType;
   readonly label: string;
-  readonly value: Value;
+  readonly value?: Value;
 }
 
 export enum AttributeType {
@@ -89,7 +90,6 @@ export enum AttributeType {
 }
 
 export interface Model extends Attribute {
-  readonly name: string;
   readonly type: AttributeType.Model;
   readonly attributes: Attribute[];
 }
@@ -103,16 +103,16 @@ export interface Collection<V extends Value> extends Attribute {
 export interface Optional<V extends Value> extends Attribute {
   readonly type: AttributeType.Optional;
   readonly subtype: AttributeType;
-  readonly value: V | undefined;
+  readonly value?: V;
 }
 
 export type Enum = string;
 
-export type Value = Attribute | Value[] | Primitive | undefined;
-
-export type Lambda = (Value, Context) => boolean;
+export type Value = Model | Value[] | Primitive | undefined;
 
 export type Primitive = Enum | Date | Number | boolean | Lambda;
+
+export type Lambda = (Value, Context) => boolean;
 
 export interface EvalOutput {
   output: boolean;
@@ -123,10 +123,10 @@ export interface EvalOutput {
 }
 
 export type FuncPool = {
-  [op in FuncType]: (...Value) => Value;
+  [op in FuncType]: (Context, ...Value) => Value;
 };
 
 export interface Context {
-  input: Value;
+  input: Model;
   funcPool: FuncPool;
 }

@@ -1,10 +1,14 @@
 import { Eval, evaluator, funcPool } from "../lib/eval";
 import {
+  AttributeType,
   Context,
   DateFunc,
   Expression,
   LogicalFunc,
+  Model,
+  ModelFunc,
   NumberFunc,
+  OptionalFunc,
 } from "../lib/types";
 
 describe("Evaluation tests", () => {
@@ -81,6 +85,12 @@ describe("Evaluation tests", () => {
       op: NumberFunc.LessThanOrEqual,
     };
     expect(evaluator(expr, context)).toBe(true);
+
+    const moreThanOrEqual: Expression = {
+      args: [24, 20],
+      op: NumberFunc.MoreThanOrEqual,
+    };
+    expect(evaluator(moreThanOrEqual, context)).toBe(true);
   });
 
   test("Eval can handle dates", () => {
@@ -96,5 +106,67 @@ describe("Evaluation tests", () => {
       op: DateFunc.IsBetween,
     };
     expect(evaluator(between, context)).toBe(true);
+  });
+
+  test("Eval can handle lookups", () => {
+    const modelInstance: Model = {
+      attributes: [{ label: "age", type: AttributeType.Number, value: 24 }],
+      type: AttributeType.Model,
+      label: "person",
+    };
+    const modelCtx = {
+      ...context,
+      input: modelInstance,
+    };
+
+    const lookup: Expression = {
+      args: ["age"],
+      op: ModelFunc.Lookup,
+    };
+
+    expect(evaluator(lookup, modelCtx)).toBe(24);
+  });
+
+  test("Eval can handle nested models", () => {
+    const personInstance: Model = {
+      attributes: [{ label: "age", type: AttributeType.Number, value: 24 }],
+      type: AttributeType.Model,
+      label: "person",
+    };
+
+    const parentInstance: Model = {
+      attributes: [
+        { label: "child", type: AttributeType.Optional, value: personInstance },
+        { label: "age", type: AttributeType.Number, value: 60 },
+      ],
+      type: AttributeType.Model,
+      label: "parent",
+    };
+
+    const child: Expression = {
+      args: ["child"],
+      op: ModelFunc.Lookup,
+    };
+    const ageOfChild: Expression = {
+      args: ["age", child],
+      op: ModelFunc.Lookup,
+    };
+    const ctx = {
+      ...context,
+      input: parentInstance,
+    };
+    expect(evaluator(ageOfChild, ctx)).toBe(24);
+
+    const parentOfChildAbove20YrsOld: Expression = {
+      args: [
+        "child",
+        {
+          args: [ageOfChild, 20],
+          op: NumberFunc.MoreThanOrEqual,
+        },
+      ],
+      op: OptionalFunc.ExistsAnd,
+    };
+    expect(evaluator(parentOfChildAbove20YrsOld, ctx)).toBe(true);
   });
 });
