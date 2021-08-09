@@ -68,11 +68,6 @@ export enum ModelFunc {
   // Dereference = "Dereference",
 }
 
-export interface ModelDefinition {
-  readonly name: string;
-  readonly attributes: AttributeType;
-}
-
 export interface Attribute {
   readonly type: AttributeType;
   readonly label: string;
@@ -96,23 +91,21 @@ export interface Model extends Attribute {
 
 export interface Collection<V extends Value> extends Attribute {
   readonly type: AttributeType.Collection;
-  readonly subtype: AttributeType;
   readonly value: V[];
 }
 
 export interface Optional<V extends Value> extends Attribute {
   readonly type: AttributeType.Optional;
-  readonly subtype: AttributeType;
   readonly value?: V;
 }
 
 export type Enum = string;
 
-export type Value = Model | Value[] | Primitive | undefined;
+export type Value = Model | Value[] | Primitive;
 
 export type Primitive = Enum | Date | Number | boolean | Lambda;
 
-export type Lambda = (Value, Context) => boolean;
+export type Lambda = (_: Model) => boolean;
 
 export interface EvalOutput {
   output: boolean;
@@ -120,13 +113,4 @@ export interface EvalOutput {
     expr: Expression;
     log: string;
   };
-}
-
-export type FuncPool = {
-  [op in FuncType]: (Context, ...Value) => Value;
-};
-
-export interface Context {
-  input: Model;
-  funcPool: FuncPool;
 }

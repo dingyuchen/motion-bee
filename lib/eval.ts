@@ -1,25 +1,27 @@
 import {
-  Attribute,
-  Collection,
-  CollectionFunc,
-  Context,
+  AttributeType,
   Enum,
   EvalOutput,
-  Expr,
   Expression,
-  FuncPool,
   IdentityFunc,
-  Lambda,
   Model,
   ModelFunc,
-  Optional,
   OptionalFunc,
   Primitive,
   Value,
 } from "./types";
 
-export const funcPool: FuncPool = {
-  Lookup: (label: string, model: Model): Value => {
+const isModel = (input: Value): input is Model => {
+  return (input as Model).attributes !== undefined;
+};
+
+export const funcPool = {
+  Lookup: (label: Value, model: Value): Value => {
+    if (!isModel(model)) {
+      throw new Error(
+        `Input: ${JSON.stringify(model)} is not a model instance`
+      );
+    }
     const matches = model.attributes.filter((attr) => attr.label === label);
     if (matches.length === 0) {
       throw new Error(
@@ -32,22 +34,11 @@ export const funcPool: FuncPool = {
     }
     return matches[0].value;
   },
-  AllOf: (collection: Value[], lambda: (Value) => boolean): boolean => {
-    console.log(collection);
-    return collection
-      .map((input) => ({
-        funcPool,
-        input,
-      }))
-      .every(lambda);
+  AllOf: (collection: Value[], lambda: (arg0: Value) => boolean): boolean => {
+    return collection.every(lambda);
   },
-  AnyOf: (collection: Value[], lambda: (Value) => boolean): boolean => {
-    const el = collection
-      .map((input) => ({
-        funcPool,
-        input,
-      }))
-      .find(lambda);
+  AnyOf: (collection: Value[], lambda: (arg0: Value) => boolean): boolean => {
+    const el = collection.find(lambda);
     return !!el;
   },
   Equal: (x: Number, y: Number): boolean => x === y,
@@ -67,16 +58,11 @@ export const funcPool: FuncPool = {
   LessThanOrEqual: (curr: Number, compr: Number) => curr <= compr,
   MoreThan: (curr: Number, compr: Number) => curr > compr,
   MoreThanOrEqual: (curr: Number, compr: Number) => curr >= compr,
-  NoneOf: (collection: Value[], lambda: (Value) => boolean) => {
-    return collection
-      .map((input) => ({
-        funcPool,
-        input,
-      }))
-      .every((x) => !lambda(x));
+  NoneOf: (collection: Value[], lambda: (arg0: Value) => boolean) => {
+    return collection.every((x) => !lambda(x));
   },
-  Lambda: (arg: Expression) => (ctx: Context) => {
-    const result = evaluator(arg, ctx);
+  Lambda: (arg: Expression) => (model: Model) => {
+    const result = evaluator(arg, model);
     if (typeof result === "boolean") {
       return result;
     }
@@ -91,34 +77,32 @@ const isPrimitive = (expr: Expression): expr is Primitive => {
   return !(typeof expr === "object");
 };
 
-export const evaluator = (expr: Expression, ctx: Context): Value => {
+export const evaluator = (expr: Expression, model?: Model): Value => {
   if (isPrimitive(expr)) {
     return expr as Value;
   }
   const { op, args } = expr;
-  const { input, funcPool } = ctx;
 
   switch (op) {
     case OptionalFunc.ExistsAnd:
       return (() => {
-        const [label, consequent, model] = [...args, input];
-        if (funcPool[OptionalFunc.Exists](label, model)) {
-          return evaluator(consequent as Expression, ctx);
+        const [label, consequent] = [...args];
+        if (funcPool[OptionalFunc.Exists](label as string, model)) {
+          return evaluator(consequent as Expression, model);
         }
         return false;
       })();
     case IdentityFunc.Lambda:
       return (() => {
         const [subExpression] = [...args];
-        return funcPool[IdentityFunc.Lambda](subExpression);
+        return funcPool[IdentityFunc.Lambda](subExpression as Expression);
       })();
     default:
-      const resultParams = [...args.map((expr) => evaluator(expr, ctx)), input];
+      const resultParams = [
+        ...args.map((expr) => evaluator(expr, model)),
+        model,
+      ];
       // @ts-ignore
       return funcPool[op](...resultParams);
   }
-};
-
-export const Eval = (expr: Expression, ctx: Context): EvalOutput => {
-  return { output: true };
 };
