@@ -84,6 +84,15 @@ export enum AttributeType {
   Model,
 }
 
+export const defaultTypes = [
+  AttributeType.Date,
+  AttributeType.Number,
+  AttributeType.Enum,
+  AttributeType.Boolean,
+  AttributeType.Collection,
+  AttributeType.Optional,
+];
+
 export interface Model extends Attribute {
   readonly type: AttributeType.Model;
   readonly attributes: Attribute[];
