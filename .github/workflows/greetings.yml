@@ -9,8 +9,8 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-    - uses: actions/first-interaction@v1
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        issue-message: '<!-- For bug reports, include steps to reproduce and desired outcome. Tag the issue accordingly! -->'
-        pr-message: '<!--\r\nThanks for making a pull request!\r\nPlease follow the given format, and link your PR to an existing issue. Open a new issue if that has not been done!\r\n-->\r\n# Overview\r\n<!-- Brief summary of what this pull request aims to accomplish -->\r\n## Commit Message\r\n```\r\n<!-- Type your commit message in monospace, keeping width below 72 characters -->\r\n```\r\n## Notes (Optional)\r\n<!-- Any other point to note -->'
+      - uses: actions/first-interaction@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: "<!-- For bug reports, include steps to reproduce and desired outcome. Tag the issue accordingly! -->"
+          pr-message: '<!--\r\nThanks for making a pull request!\r\nPlease follow the given format, and link your PR to an existing issue. Open a new issue if that has not been done!\r\n-->\r\n# Overview\r\n<!-- Brief summary of what this pull request aims to accomplish -->\r\n## Commit Message\r\n```\r\n<!-- Type your commit message in monospace, keeping width below 72 characters -->\r\n```\r\n## Notes (Optional)\r\n<!-- Any other point to note -->'
