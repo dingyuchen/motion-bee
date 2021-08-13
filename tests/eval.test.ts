@@ -196,7 +196,7 @@ describe("Evaluation tests", () => {
         { label: "same household", type: AttributeType.Boolean, value: true },
       ],
       type: AttributeType.Model,
-      label: "group",
+      label: "gathering",
     };
 
     const isVaccinated: Expression = {

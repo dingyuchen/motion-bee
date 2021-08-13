@@ -55,7 +55,7 @@ export enum CollectionFunc {
   AllOf = "AllOf",
   NoneOf = "NoneOf",
   AnyOf = "AnyOf",
-  NumberOf = "NoneOf",
+  NumberOf = "NumberOf",
 }
 
 export enum OptionalFunc {
