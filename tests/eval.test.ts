@@ -215,10 +215,7 @@ describe("Evaluation tests", () => {
           args: ["group"],
           op: ModelFunc.Lookup,
         },
-        {
-          args: [isVaccinated],
-          op: IdentityFunc.Lambda,
-        },
+        isVaccinated,
       ],
       op: CollectionFunc.AllOf,
     };

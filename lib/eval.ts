@@ -28,11 +28,11 @@ export const funcPool = {
     }
     return matches[0].value;
   },
-  AllOf: (collection: Value[], lambda: (arg0: Value) => boolean): boolean => {
-    return collection.every(lambda);
+  AllOf: (collection: Value[], subExpr: Expression): boolean => {
+    return collection.every(toLambda(subExpr));
   },
-  AnyOf: (collection: Value[], lambda: (arg0: Value) => boolean): boolean => {
-    const el = collection.find(lambda);
+  AnyOf: (collection: Value[], subExpr: Expression): boolean => {
+    const el = collection.find(toLambda(subExpr));
     return !!el;
   },
   Equal: (x: Number, y: Number): boolean => x === y,
@@ -49,19 +49,21 @@ export const funcPool = {
   LessThanOrEqual: (curr: Number, compr: Number) => curr <= compr,
   MoreThan: (curr: Number, compr: Number) => curr > compr,
   MoreThanOrEqual: (curr: Number, compr: Number) => curr >= compr,
-  NoneOf: (collection: Value[], lambda: (arg0: Value) => boolean) => {
+  NoneOf: (collection: Model[], subExpr: Expression) => {
+    const lambda = toLambda(subExpr);
     return collection.every((x) => !lambda(x));
-  },
-  Lambda: (arg: Expression) => (model: Model) => {
-    const result = evaluator(arg, model);
-    if (typeof result === "boolean") {
-      return result;
-    }
-    throw new Error("Not a valid Lambda expression");
   },
   And: (...args: boolean[]) => args.every((x) => x),
   Or: (...args: boolean[]) => !!args.find((x) => x),
   Not: (arg: boolean) => !arg,
+};
+
+const toLambda = (arg: Expression) => (model: Model) => {
+  const result = evaluator(arg, model);
+  if (typeof result === "boolean") {
+    return result;
+  }
+  throw new Error("Not a valid Lambda expression");
 };
 
 const isPrimitive = (expr: Expression): expr is Primitive => {
@@ -82,11 +84,6 @@ export const evaluator = (expr: Expression, model?: Model): Value => {
           return evaluator(consequent as Expression, model);
         }
         return false;
-      })();
-    case IdentityFunc.Lambda:
-      return (() => {
-        const [subExpression] = [...args];
-        return funcPool[IdentityFunc.Lambda](subExpression as Expression);
       })();
     default:
       const resultParams = [...args.map((expr) => evaluator(expr, model)), model];
