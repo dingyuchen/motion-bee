@@ -68,8 +68,8 @@ export const funcPool = {
     }
     throw new Error("Not a valid Lambda expression");
   },
-  And: (left: boolean, right: boolean) => left && right,
-  Or: (left: boolean, right: boolean) => left || right,
+  And: (...args: boolean[]) => args.every((x) => x),
+  Or: (...args: boolean[]) => !!args.find((x) => x),
   Not: (arg: boolean) => !arg,
 };
 
