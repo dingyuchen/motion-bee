@@ -56,6 +56,7 @@ export enum CollectionFunc {
   NoneOf = "NoneOf",
   AnyOf = "AnyOf",
   NumberOf = "NumberOf",
+  Size = "Size",
 }
 
 export enum OptionalFunc {

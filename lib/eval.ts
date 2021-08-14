@@ -20,32 +20,23 @@ const isModel = (input: Value): input is Model => {
 export const funcPool = {
   Lookup: (label: Value, model: Value): Value => {
     if (!isModel(model)) {
-      throw new Error(
-        `Input: ${JSON.stringify(model)} is not a model instance`
-      );
+      throw new Error(`Input: ${JSON.stringify(model)} is not a model instance`);
     }
     const matches = model.attributes.filter((attr) => attr.label === label);
     if (matches.length === 0) {
-      throw new Error(
-        `Label: ${label} of Model: ${model.label} does not exist`
-      );
+      throw new Error(`Label: ${label} of Model: ${model.label} does not exist`);
     } else if (matches.length > 1) {
-      throw new Error(
-        `Label: ${label} of Model: ${model.label} does not exist`
-      );
+      throw new Error(`Label: ${label} of Model: ${model.label} does not exist`);
     }
     return matches[0].value;
   },
   Equal: (x: Number, y: Number): boolean => x === y,
-  Exists: (label: string, model: Model): boolean =>
-    !!funcPool[ModelFunc.Lookup](label, model),
-  ExistsAnd: (label: string, model: Model) =>
-    funcPool[OptionalFunc.Exists](label, model),
+  Exists: (label: string, model: Model): boolean => !!funcPool[ModelFunc.Lookup](label, model),
+  ExistsAnd: (label: string, model: Model) => funcPool[OptionalFunc.Exists](label, model),
   Is: (left: Enum, right: Enum) => left === right,
   IsAfter: (curr: Date, compr: Date) => curr > compr,
   IsBefore: (curr: Date, compr: Date) => curr < compr,
-  IsBetween: (curr: Date, lower: Date, upper: Date) =>
-    lower < curr && curr < upper,
+  IsBetween: (curr: Date, lower: Date, upper: Date) => lower < curr && curr < upper,
   IsChecked: (checkbox: boolean) => !!checkbox,
   IsNot: (left: Enum, right: Enum) => left !== right,
   IsNotChecked: (checkbox: boolean) => !checkbox,
@@ -119,11 +110,14 @@ export const evaluator = (expr: Expression, model?: Model): Value => {
         const lambda = toLambda(subExpr as Expression);
         return values.filter(lambda).length;
       })();
+    case CollectionFunc.Size:
+      return (() => {
+        const [collection] = [...args];
+        const values = evaluator(collection as Expression, model) as Model[];
+        return values.length;
+      })();
     default:
-      const resultParams = [
-        ...args.map((expr) => evaluator(expr, model)),
-        model,
-      ];
+      const resultParams = [...args.map((expr) => evaluator(expr, model)), model];
       // @ts-ignore
       return funcPool[op](...resultParams);
   }
