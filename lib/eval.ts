@@ -4,7 +4,6 @@ import {
   Enum,
   EvalOutput,
   Expression,
-  IdentityFunc,
   LogicalFunc,
   Model,
   ModelFunc,

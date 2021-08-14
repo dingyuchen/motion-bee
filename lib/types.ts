@@ -6,7 +6,6 @@ export interface Expr {
 export type Expression = Expr | Primitive;
 
 export type FuncType =
-  | IdentityFunc
   | LogicalFunc
   | DateFunc
   | NumberFunc
@@ -15,11 +14,6 @@ export type FuncType =
   | CollectionFunc
   | OptionalFunc
   | ModelFunc;
-
-export enum IdentityFunc {
-  Lambda = "Lambda",
-  // Variable = "Variable",
-}
 
 export enum LogicalFunc {
   And = "And",
@@ -113,7 +107,7 @@ export type Enum = string;
 
 export type Value = Model | Value[] | Primitive;
 
-export type Primitive = Enum | Date | Number | boolean | Lambda;
+export type Primitive = Enum | Date | Number | boolean;
 
 export type Lambda = (_: Model) => boolean;
 
