@@ -27,7 +27,7 @@ export const funcPool = {
     } else if (matches.length > 1) {
       throw new Error(`Label: ${label} of Model: ${model.label} does not exist`);
     }
-    return matches[0].value;
+    return matches[0].value!;
   },
   Equal: (x: Number, y: Number): boolean => x === y,
   Exists: (label: string, model: Model): boolean => !!funcPool[ModelFunc.Lookup](label, model),
@@ -58,7 +58,7 @@ const isPrimitive = (expr: Expression): expr is Primitive => {
   return !(typeof expr === "object");
 };
 
-export const evaluator = (expr: Expression, model?: Model): Value => {
+export const evaluator = (expr: Expression, model: Model): Value => {
   if (isPrimitive(expr)) {
     return expr as Value;
   }
@@ -75,12 +75,12 @@ export const evaluator = (expr: Expression, model?: Model): Value => {
       })();
     case LogicalFunc.And:
       return (() => {
-        let values = args.map((expr) => evaluator(expr, model)) as boolean[];
+        let values = args.map((expr) => evaluator(expr as Expression, model)) as boolean[];
         return values.every((x) => x);
       })();
     case LogicalFunc.Or:
       return (() => {
-        let values = args.map((expr) => evaluator(expr, model)) as boolean[];
+        let values = args.map((expr) => evaluator(expr as Expression, model)) as boolean[];
         return !!values.find((x) => x);
       })();
     case CollectionFunc.AllOf:
@@ -116,7 +116,7 @@ export const evaluator = (expr: Expression, model?: Model): Value => {
         return values.length;
       })();
     default:
-      const resultParams = [...args.map((expr) => evaluator(expr, model)), model];
+      const resultParams = [...args.map((expr) => evaluator(expr as Expression, model)), model];
       // @ts-ignore
       return funcPool[op](...resultParams);
   }
